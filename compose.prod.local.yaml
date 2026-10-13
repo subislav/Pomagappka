@@ -1,0 +1,36 @@
+name: pomagappka-prod-local
+
+services:
+  mailpit:
+    image: axllent/mailpit:v1.21
+    restart: unless-stopped
+    networks:
+      - internal
+
+  api:
+    environment:
+      EMAIL_PROVIDER: smtp
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      EMAIL_FROM: Pomagappka <noreply@localhost>
+      RESEND_API_KEY: ""
+      APP_URL: ${APP_URL:-https://localhost}
+      API_URL: ${API_URL:-https://localhost}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-https://localhost}
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  caddy:
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+      CADDY_EMAIL: ${CADDY_EMAIL:-admin@localhost}
+    volumes:
+      - ./deploy/Caddyfile.local:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    ports:
+      - "80:80"
+      - "443:443"

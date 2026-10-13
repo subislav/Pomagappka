@@ -1,1 +1,0 @@
-App for helping people.

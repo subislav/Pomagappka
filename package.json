@@ -1,0 +1,16 @@
+{
+  "name": "pomagappka",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @pomagappka/api --filter @pomagappka/web dev",
+    "build": "pnpm -r --filter @pomagappka/shared --filter @pomagappka/api --filter @pomagappka/web build",
+    "test": "pnpm -r --filter @pomagappka/shared --filter @pomagappka/api test",
+    "test:e2e": "pnpm --filter @pomagappka/e2e test",
+    "typecheck": "pnpm -r --filter @pomagappka/shared --filter @pomagappka/api --filter @pomagappka/web typecheck",
+    "lint": "pnpm -r --filter @pomagappka/shared --filter @pomagappka/api --filter @pomagappka/web typecheck"
+  }
+}

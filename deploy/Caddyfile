@@ -1,0 +1,15 @@
+{
+  email {$CADDY_EMAIL:admin@example.com}
+}
+
+{$DOMAIN:localhost} {
+  encode gzip
+
+  handle /api/* {
+    reverse_proxy api:3000
+  }
+
+  handle {
+    reverse_proxy web:80
+  }
+}

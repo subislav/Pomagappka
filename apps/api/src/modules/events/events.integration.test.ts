@@ -1,0 +1,233 @@
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { FastifyInstance } from "fastify";
+import { buildApp } from "../../app.js";
+import { loadEnv } from "../../config/env.js";
+import { MemoryEmailSender } from "../../email/memory-sender.js";
+import { EVENT_ACCESS_COOKIE } from "./access-session.js";
+const hasDatabase = Boolean(process.env.DATABASE_URL);
+function extractCookie(setCookie: string | string[] | undefined, name: string): string | undefined {
+    const headers = Array.isArray(setCookie)
+        ? setCookie
+        : setCookie
+            ? [setCookie]
+            : [];
+    for (const header of headers) {
+        const match = header.match(new RegExp(`${name}=([^;]+)`));
+        if (match?.[1]) {
+            return decodeURIComponent(match[1]);
+        }
+    }
+    return undefined;
+}
+describe.skipIf(!hasDatabase)("events + PIN access", () => {
+    let app: FastifyInstance;
+    let cookieHeader = "";
+    beforeAll(async () => {
+        const env = loadEnv({
+            ...process.env,
+            BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET ??
+                "dev-secret-at-least-32-characters-long",
+            BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? "http://localhost:5173",
+            APP_URL: process.env.APP_URL ?? "http://localhost:5173",
+            API_URL: process.env.API_URL ?? "http://localhost:3000",
+            LOG_LEVEL: "silent",
+        });
+        app = await buildApp(env, { email: new MemoryEmailSender() });
+    });
+    afterAll(async () => {
+        await app.close();
+    });
+    async function signUpOrganizer() {
+        const email = `org-${Date.now()}-${Math.random().toString(16).slice(2)}@example.com`;
+        const response = await app.inject({
+            method: "POST",
+            url: "/api/auth/sign-up/email",
+            payload: {
+                name: "Organizer Test",
+                email,
+                password: "haslo12345",
+            },
+        });
+        expect(response.statusCode).toBe(200);
+        const setCookie = response.headers["set-cookie"];
+        cookieHeader = Array.isArray(setCookie)
+            ? setCookie.map((c) => c.split(";")[0]).join("; ")
+            : String(setCookie ?? "")
+                .split(",")
+                .map((c) => c.split(";")[0]?.trim())
+                .filter(Boolean)
+                .join("; ");
+        return email;
+    }
+    it("denies unauthorized event payload and accepts valid PIN session", async () => {
+        await signUpOrganizer();
+        const created = await app.inject({
+            method: "POST",
+            url: "/api/organizer/events",
+            headers: { cookie: cookieHeader },
+            payload: {
+                title: "Wsparcie po operacji",
+                recipientDisplayName: "Rodzina Nowaków",
+                peopleCount: 3,
+                startsOn: "2026-11-01",
+                endsOn: "2026-11-14",
+                description: "Prosimy o proste posiłki",
+            },
+        });
+        expect(created.statusCode).toBe(201);
+        const body = created.json() as {
+            event: {
+                invitationToken: string;
+                id: string;
+            };
+            pin: string;
+        };
+        expect(body.pin).toMatch(/^\d{4}$/);
+        expect(JSON.stringify(body)).not.toContain("pinHash");
+        const unauthorized = await app.inject({
+            method: "GET",
+            url: `/api/invite/${body.event.invitationToken}/event`,
+        });
+        expect(unauthorized.statusCode).toBe(401);
+        const badPin = await app.inject({
+            method: "POST",
+            url: `/api/invite/${body.event.invitationToken}/verify-pin`,
+            payload: { pin: body.pin === "0000" ? "1111" : "0000" },
+        });
+        expect(badPin.statusCode).toBe(401);
+        expect(badPin.json()).toMatchObject({
+            error: { code: "INVALID_CREDENTIALS" },
+        });
+        const goodPin = await app.inject({
+            method: "POST",
+            url: `/api/invite/${body.event.invitationToken}/verify-pin`,
+            payload: { pin: body.pin },
+        });
+        expect(goodPin.statusCode).toBe(200);
+        const accessCookie = extractCookie(goodPin.headers["set-cookie"], EVENT_ACCESS_COOKIE);
+        expect(accessCookie).toBeTruthy();
+        const authorized = await app.inject({
+            method: "GET",
+            url: `/api/invite/${body.event.invitationToken}/event`,
+            headers: {
+                cookie: `${EVENT_ACCESS_COOKIE}=${accessCookie}`,
+            },
+        });
+        expect(authorized.statusCode).toBe(200);
+        expect(authorized.json()).toMatchObject({
+            event: {
+                title: "Wsparcie po operacji",
+                recipientDisplayName: "Rodzina Nowaków",
+            },
+        });
+        expect(JSON.stringify(authorized.json())).not.toContain("pin");
+    });
+    it("isolates access sessions across events and invalidates on PIN rotate", async () => {
+        await signUpOrganizer();
+        const eventA = await app.inject({
+            method: "POST",
+            url: "/api/organizer/events",
+            headers: { cookie: cookieHeader },
+            payload: {
+                title: "Event A",
+                recipientDisplayName: "Odbiorca A",
+                peopleCount: 2,
+                startsOn: "2026-11-01",
+                endsOn: "2026-11-07",
+            },
+        });
+        const eventB = await app.inject({
+            method: "POST",
+            url: "/api/organizer/events",
+            headers: { cookie: cookieHeader },
+            payload: {
+                title: "Event B",
+                recipientDisplayName: "Odbiorca B",
+                peopleCount: 2,
+                startsOn: "2026-11-01",
+                endsOn: "2026-11-07",
+            },
+        });
+        const a = eventA.json() as {
+            event: {
+                id: string;
+                invitationToken: string;
+            };
+            pin: string;
+        };
+        const b = eventB.json() as {
+            event: {
+                id: string;
+                invitationToken: string;
+            };
+            pin: string;
+        };
+        const verifyA = await app.inject({
+            method: "POST",
+            url: `/api/invite/${a.event.invitationToken}/verify-pin`,
+            payload: { pin: a.pin },
+        });
+        const cookieA = extractCookie(verifyA.headers["set-cookie"], EVENT_ACCESS_COOKIE);
+        const cross = await app.inject({
+            method: "GET",
+            url: `/api/invite/${b.event.invitationToken}/event`,
+            headers: { cookie: `${EVENT_ACCESS_COOKIE}=${cookieA}` },
+        });
+        expect(cross.statusCode).toBe(401);
+        const regen = await app.inject({
+            method: "POST",
+            url: `/api/organizer/events/${a.event.id}/pin/regenerate`,
+            headers: { cookie: cookieHeader },
+        });
+        expect(regen.statusCode).toBe(200);
+        const newPin = (regen.json() as {
+            pin: string;
+        }).pin;
+        const afterRotate = await app.inject({
+            method: "GET",
+            url: `/api/invite/${a.event.invitationToken}/event`,
+            headers: { cookie: `${EVENT_ACCESS_COOKIE}=${cookieA}` },
+        });
+        expect(afterRotate.statusCode).toBe(401);
+        const reenter = await app.inject({
+            method: "POST",
+            url: `/api/invite/${a.event.invitationToken}/verify-pin`,
+            payload: { pin: newPin },
+        });
+        expect(reenter.statusCode).toBe(200);
+    });
+    it("locks out after repeated PIN guessing", async () => {
+        await signUpOrganizer();
+        const created = await app.inject({
+            method: "POST",
+            url: "/api/organizer/events",
+            headers: { cookie: cookieHeader },
+            payload: {
+                title: "Lockout event",
+                recipientDisplayName: "Odbiorca",
+                peopleCount: 1,
+                startsOn: "2026-12-01",
+                endsOn: "2026-12-02",
+            },
+        });
+        const body = created.json() as {
+            event: {
+                invitationToken: string;
+            };
+            pin: string;
+        };
+        const wrong = body.pin === "9999" ? "0000" : "9999";
+        let lastStatus = 0;
+        for (let i = 0; i < 6; i += 1) {
+            const response = await app.inject({
+                method: "POST",
+                url: `/api/invite/${body.event.invitationToken}/verify-pin`,
+                payload: { pin: wrong },
+                remoteAddress: "203.0.113.50",
+            });
+            lastStatus = response.statusCode;
+        }
+        expect([401, 429]).toContain(lastStatus);
+        expect(lastStatus).toBe(429);
+    });
+});

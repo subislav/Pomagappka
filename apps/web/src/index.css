@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+:root {
+  --color-ink: #12263a;
+  --color-sea: #0b6e7a;
+  --color-lagoon: #148a96;
+  --color-mist: #e8f1f4;
+  --color-line: #c5d7de;
+  --color-accent: #d97706;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Source Sans 3", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  background-color: #f2f7f9;
+  background-image:
+    linear-gradient(180deg, rgba(11, 110, 122, 0.08), transparent 42%),
+    repeating-linear-gradient(
+      -12deg,
+      transparent,
+      transparent 18px,
+      rgba(20, 138, 150, 0.04) 18px,
+      rgba(20, 138, 150, 0.04) 19px
+    );
+}
+
+h1,
+h2,
+.brand {
+  font-family: var(--font-display);
+}
