@@ -30,8 +30,8 @@ export async function buildApp(env: Env, options: BuildAppOptions = {}) {
         },
     });
     const { db, sql } = createDb(env);
-    const auth = createAuth(db, env);
     const email = options.email ?? createEmailSender(env);
+    const auth = createAuth(db, env, email);
     app.decorate("db", db);
     app.decorate("sql", sql);
     app.decorate("env", env);

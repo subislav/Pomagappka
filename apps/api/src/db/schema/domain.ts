@@ -96,6 +96,7 @@ export const pinVerificationAttempts = pgTable("pin_verification_attempts", {
     eventId: uuid("event_id").references(() => events.id, {
         onDelete: "cascade",
     }),
+    pinVersion: integer("pin_version"),
     invitationTokenFingerprint: text("invitation_token_fingerprint").notNull(),
     ipHash: text("ip_hash").notNull(),
     succeeded: boolean("succeeded").notNull().default(false),
@@ -105,6 +106,11 @@ export const pinVerificationAttempts = pgTable("pin_verification_attempts", {
 }, (table) => [
     index("pin_attempts_ip_created_idx").on(table.ipHash, table.createdAt),
     index("pin_attempts_event_created_idx").on(table.eventId, table.createdAt),
+    index("pin_attempts_event_ip_version_idx").on(
+        table.eventId,
+        table.ipHash,
+        table.pinVersion,
+    ),
 ]);
 export const bookingCancellationTokens = pgTable("booking_cancellation_tokens", {
     id: uuid("id").defaultRandom().primaryKey(),

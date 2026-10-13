@@ -3,7 +3,7 @@ import { uniqueEmail } from "../helpers/unique.js";
 test.describe("organizer auth", () => {
     test("register, logout, and login again", async ({ page }) => {
         const email = uniqueEmail("auth");
-        const password = "haslo12345";
+        const password = "Haslo12345";
         await page.goto("/rejestracja");
         await page.getByLabel("Imię i nazwisko").fill("Auth E2E");
         await page.getByLabel("Adres e-mail").fill(email);

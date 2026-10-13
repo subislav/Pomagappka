@@ -1,22 +1,45 @@
 import { z } from "zod";
+
+export const passwordSchema = z
+  .string()
+  .min(8)
+  .max(128)
+  .regex(/[a-z]/, "lowercase")
+  .regex(/[A-Z]/, "uppercase")
+  .regex(/\d/, "digit");
+
 export const signUpBodySchema = z.object({
-    name: z.string().trim().min(1).max(120),
-    email: z.string().trim().email().max(255),
-    password: z.string().min(8).max(128),
+  name: z.string().trim().min(1).max(120),
+  email: z.string().trim().email().max(255),
+  password: passwordSchema,
 });
 export type SignUpBody = z.infer<typeof signUpBodySchema>;
+
 export const signInBodySchema = z.object({
-    email: z.string().trim().email().max(255),
-    password: z.string().min(1).max(128),
+  email: z.string().trim().email().max(255),
+  password: z.string().min(1).max(128),
 });
 export type SignInBody = z.infer<typeof signInBodySchema>;
+
+export const forgotPasswordBodySchema = z.object({
+  email: z.string().trim().email().max(255),
+});
+export type ForgotPasswordBody = z.infer<typeof forgotPasswordBodySchema>;
+
+export const resetPasswordBodySchema = z.object({
+  password: passwordSchema,
+  token: z.string().min(1),
+});
+export type ResetPasswordBody = z.infer<typeof resetPasswordBodySchema>;
+
 export const organizerUserSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    email: z.string().email(),
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
 });
 export type OrganizerUser = z.infer<typeof organizerUserSchema>;
+
 export const organizerMeResponseSchema = z.object({
-    user: organizerUserSchema,
+  user: organizerUserSchema,
 });
 export type OrganizerMeResponse = z.infer<typeof organizerMeResponseSchema>;

@@ -12,7 +12,7 @@ async function registerOrganizer(page: Page, email: string, password: string) {
 test.describe("meal train critical path", () => {
     test("register → create event → slot → PIN → book → cancel", async ({ page, browser, }) => {
         const email = uniqueEmail("org");
-        const password = "haslo12345";
+        const password = "Haslo12345";
         const { startsOn, endsOn } = eventDateRange(3);
         await registerOrganizer(page, email, password);
         await page.getByRole("link", { name: "Nowe wydarzenie" }).first().click();

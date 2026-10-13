@@ -76,6 +76,13 @@ Przenośne na VPS (Hetzner, Oracle Cloud, AWS EC2 itd.). Obrazy bazują na oficj
 
 Backupy Postgres: `deploy/backup-db.sh` / `deploy/restore-db.sh`.
 
+## Auth
+
+- Hasło: min. 8 znaków, wielka litera, mała litera, cyfra; nowe hasło nie może być takie samo jak poprzednie
+- Reset hasła: `/zapomniane-haslo` (e-mail przez Mailpit/Resend)
+- Google login: opcjonalnie, gdy ustawisz `GOOGLE_CLIENT_ID` i `GOOGLE_CLIENT_SECRET` (callback: `{BETTER_AUTH_URL}/api/auth/callback/google`)
+- PIN: 5 błędnych prób z tego samego IP → wymagany nowy PIN od organizatora
+
 ## Fazy
 
 Obecnie: **Faza 0–6** (docs, Docker, auth, wydarzenia, rezerwacje, e-mail, E2E/produkcja/ops).

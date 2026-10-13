@@ -42,7 +42,7 @@ describe.skipIf(!hasDatabase)("bookings concurrency and cancel", () => {
         const signup = await app.inject({
             method: "POST",
             url: "/api/auth/sign-up/email",
-            payload: { name: "Org", email, password: "haslo12345" },
+            payload: { name: "Org", email, password: "Haslo12345" },
         });
         expect(signup.statusCode).toBe(200);
         const setCookie = signup.headers["set-cookie"];

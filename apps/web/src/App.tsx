@@ -4,27 +4,49 @@ import { CancelBookingPage } from "./pages/CancelBookingPage";
 import { CreateEventPage } from "./pages/CreateEventPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { EventDetailPage } from "./pages/EventDetailPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { InviteEventPage } from "./pages/InviteEventPage";
 import { InvitePinPage } from "./pages/InvitePinPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+
 export function App() {
-    return (<Routes>
-      <Route path="/" element={<LandingPage />}/>
-      <Route path="/logowanie" element={<LoginPage />}/>
-      <Route path="/rejestracja" element={<RegisterPage />}/>
-      <Route path="/anuluj/:token" element={<CancelBookingPage />}/>
-      <Route path="/i/:token" element={<InvitePinPage />}/>
-      <Route path="/i/:token/wydarzenie" element={<InviteEventPage />}/>
-      <Route path="/panel" element={<ProtectedRoute>
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/logowanie" element={<LoginPage />} />
+      <Route path="/rejestracja" element={<RegisterPage />} />
+      <Route path="/zapomniane-haslo" element={<ForgotPasswordPage />} />
+      <Route path="/reset-hasla" element={<ResetPasswordPage />} />
+      <Route path="/anuluj/:token" element={<CancelBookingPage />} />
+      <Route path="/i/:token" element={<InvitePinPage />} />
+      <Route path="/i/:token/wydarzenie" element={<InviteEventPage />} />
+      <Route
+        path="/panel"
+        element={
+          <ProtectedRoute>
             <DashboardPage />
-          </ProtectedRoute>}/>
-      <Route path="/panel/wydarzenia/nowe" element={<ProtectedRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/panel/wydarzenia/nowe"
+        element={
+          <ProtectedRoute>
             <CreateEventPage />
-          </ProtectedRoute>}/>
-      <Route path="/panel/wydarzenia/:id" element={<ProtectedRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/panel/wydarzenia/:id"
+        element={
+          <ProtectedRoute>
             <EventDetailPage />
-          </ProtectedRoute>}/>
-    </Routes>);
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
 }

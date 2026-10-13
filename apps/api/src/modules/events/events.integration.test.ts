@@ -45,7 +45,7 @@ describe.skipIf(!hasDatabase)("events + PIN access", () => {
             payload: {
                 name: "Organizer Test",
                 email,
-                password: "haslo12345",
+                password: "Haslo12345",
             },
         });
         expect(response.statusCode).toBe(200);
@@ -212,12 +212,14 @@ describe.skipIf(!hasDatabase)("events + PIN access", () => {
         });
         const body = created.json() as {
             event: {
+                id: string;
                 invitationToken: string;
             };
             pin: string;
         };
         const wrong = body.pin === "9999" ? "0000" : "9999";
         let lastStatus = 0;
+        let lastBody: { error?: { code?: string } } = {};
         for (let i = 0; i < 6; i += 1) {
             const response = await app.inject({
                 method: "POST",
@@ -226,8 +228,33 @@ describe.skipIf(!hasDatabase)("events + PIN access", () => {
                 remoteAddress: "203.0.113.50",
             });
             lastStatus = response.statusCode;
+            lastBody = response.json() as { error?: { code?: string } };
         }
-        expect([401, 429]).toContain(lastStatus);
         expect(lastStatus).toBe(429);
+        expect(lastBody.error?.code).toBe("PIN_RESET_REQUIRED");
+
+        const stillLocked = await app.inject({
+            method: "POST",
+            url: `/api/invite/${body.event.invitationToken}/verify-pin`,
+            payload: { pin: body.pin },
+            remoteAddress: "203.0.113.50",
+        });
+        expect(stillLocked.statusCode).toBe(429);
+
+        const regenerated = await app.inject({
+            method: "POST",
+            url: `/api/organizer/events/${body.event.id}/pin/regenerate`,
+            headers: { cookie: cookieHeader },
+        });
+        expect(regenerated.statusCode).toBe(200);
+        const newPin = (regenerated.json() as { pin: string }).pin;
+
+        const unlocked = await app.inject({
+            method: "POST",
+            url: `/api/invite/${body.event.invitationToken}/verify-pin`,
+            payload: { pin: newPin },
+            remoteAddress: "203.0.113.50",
+        });
+        expect(unlocked.statusCode).toBe(200);
     });
 });
