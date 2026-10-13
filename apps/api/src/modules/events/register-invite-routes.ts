@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { AppError, toErrorBody } from "../../lib/errors.js";
 import { EVENT_ACCESS_COOKIE, buildEventAccessCookie, clearEventAccessCookie, readCookie, resolveEventAccessSession, } from "./access-session.js";
 import { findEventByInvitationToken } from "./event-service.js";
+import { listEventUpdates } from "./event-update-service.js";
 import { toParticipantEvent } from "./mappers.js";
 import { PIN_LOCKOUT_RETRY_AFTER_SEC } from "./pin-rate-limit.js";
 import { verifyInvitationPin } from "./pin-verify.js";
@@ -99,6 +100,37 @@ export async function registerInviteRoutes(app: FastifyInstance) {
             return reply.send({
                 event: toParticipantEvent(access.event),
             });
+        }
+        catch (error) {
+            return handleRouteError(error, reply, request.log);
+        }
+    });
+    app.get("/api/invite/:token/updates", async (request, reply) => {
+        const { token } = request.params as {
+            token: string;
+        };
+        try {
+            const event = await findEventByInvitationToken(app.db, token);
+            if (!event || event.status === "deleted") {
+                return reply.status(404).send({
+                    error: {
+                        code: "NOT_FOUND",
+                        message: "Nie znaleziono zaproszenia.",
+                    },
+                });
+            }
+            const raw = readCookie(request.headers.cookie, EVENT_ACCESS_COOKIE);
+            const access = await resolveEventAccessSession(app.db, raw, event.id);
+            if (!access) {
+                return reply.status(401).send({
+                    error: {
+                        code: "UNAUTHORIZED",
+                        message: "Wymagane potwierdzenie PIN.",
+                    },
+                });
+            }
+            const updates = await listEventUpdates(app.db, access.event.id);
+            return reply.send({ updates });
         }
         catch (error) {
             return handleRouteError(error, reply, request.log);

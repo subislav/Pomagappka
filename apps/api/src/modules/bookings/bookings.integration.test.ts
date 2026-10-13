@@ -155,6 +155,41 @@ describe.skipIf(!hasDatabase)("bookings concurrency and cancel", () => {
             };
         }).booking.id).toBe(firstId);
     });
+    it("allows organizer to book on behalf of someone", async () => {
+        const ctx = await setupEventWithSlot();
+        const created = await app.inject({
+            method: "POST",
+            url: `/api/organizer/events/${ctx.eventId}/bookings`,
+            headers: { cookie: organizerCookie },
+            payload: {
+                slotId: ctx.slotId,
+                participantName: "Ewa",
+                participantEmail: "ewa@example.com",
+                mealDescription: "Lasagne",
+            },
+        });
+        expect(created.statusCode).toBe(201);
+        expect(created.json()).toMatchObject({
+            booking: {
+                participantName: "Ewa",
+                bookedOnBehalf: true,
+            },
+        });
+        const list = await app.inject({
+            method: "GET",
+            url: `/api/organizer/events/${ctx.eventId}/bookings`,
+            headers: { cookie: organizerCookie },
+        });
+        expect(list.statusCode).toBe(200);
+        expect(list.json()).toMatchObject({
+            bookings: [
+                expect.objectContaining({
+                    participantEmail: "ewa@example.com",
+                    bookedOnBehalf: true,
+                }),
+            ],
+        });
+    });
     it("cancels with a valid token and rejects invalid/used tokens", async () => {
         const ctx = await setupEventWithSlot();
         const created = await app.inject({

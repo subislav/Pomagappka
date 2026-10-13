@@ -122,6 +122,144 @@ describe.skipIf(!hasDatabase)("events + PIN access", () => {
         });
         expect(JSON.stringify(authorized.json())).not.toContain("pin");
     });
+    it("exposes address and phone only after PIN session", async () => {
+        await signUpOrganizer();
+        const created = await app.inject({
+            method: "POST",
+            url: "/api/organizer/events",
+            headers: { cookie: cookieHeader },
+            payload: {
+                title: "Prywatne dane",
+                recipientDisplayName: "Rodzina",
+                peopleCount: 2,
+                startsOn: "2026-11-01",
+                endsOn: "2026-11-07",
+                dropOffAddress: "ul. Sekwana 12, Warszawa",
+                recipientPhone: "+48123123123",
+                allergies: "orzechy",
+            },
+        });
+        expect(created.statusCode).toBe(201);
+        const body = created.json() as {
+            event: {
+                invitationToken: string;
+                dropOffAddress: string;
+            };
+            pin: string;
+        };
+        expect(body.event.dropOffAddress).toBe("ul. Sekwana 12, Warszawa");
+        const unauthorized = await app.inject({
+            method: "GET",
+            url: `/api/invite/${body.event.invitationToken}/event`,
+        });
+        expect(unauthorized.statusCode).toBe(401);
+        expect(JSON.stringify(unauthorized.json())).not.toContain("Sekwana");
+        expect(JSON.stringify(unauthorized.json())).not.toContain("+48123123123");
+        const goodPin = await app.inject({
+            method: "POST",
+            url: `/api/invite/${body.event.invitationToken}/verify-pin`,
+            payload: { pin: body.pin },
+        });
+        const accessCookie = extractCookie(goodPin.headers["set-cookie"], EVENT_ACCESS_COOKIE);
+        const authorized = await app.inject({
+            method: "GET",
+            url: `/api/invite/${body.event.invitationToken}/event`,
+            headers: {
+                cookie: `${EVENT_ACCESS_COOKIE}=${accessCookie}`,
+            },
+        });
+        expect(authorized.statusCode).toBe(200);
+        expect(authorized.json()).toMatchObject({
+            event: {
+                dropOffAddress: "ul. Sekwana 12, Warszawa",
+                recipientPhone: "+48123123123",
+                allergies: "orzechy",
+            },
+        });
+    });
+    it("creates grocery events with grocery brackets after PIN", async () => {
+        await signUpOrganizer();
+        const created = await app.inject({
+            method: "POST",
+            url: "/api/organizer/events",
+            headers: { cookie: cookieHeader },
+            payload: {
+                title: "Zakupy dla mamy",
+                recipientDisplayName: "Mama",
+                peopleCount: 1,
+                startsOn: "2026-11-01",
+                endsOn: "2026-11-10",
+                assistanceType: "grocery",
+                groceryList: "mleko, chleb, jabłka",
+                groceryCategories: ["dairy", "bread", "fruitVeg"],
+                budgetHint: "do 150 zł",
+                storePreference: "Biedronka",
+            },
+        });
+        expect(created.statusCode).toBe(201);
+        const body = created.json() as {
+            event: {
+                id: string;
+                invitationToken: string;
+                assistanceType: string;
+            };
+            pin: string;
+        };
+        expect(body.event.assistanceType).toBe("grocery");
+        const verify = await app.inject({
+            method: "POST",
+            url: `/api/invite/${body.event.invitationToken}/verify-pin`,
+            payload: { pin: body.pin },
+        });
+        const accessCookie = extractCookie(verify.headers["set-cookie"], EVENT_ACCESS_COOKIE);
+        const authorized = await app.inject({
+            method: "GET",
+            url: `/api/invite/${body.event.invitationToken}/event`,
+            headers: {
+                cookie: `${EVENT_ACCESS_COOKIE}=${accessCookie}`,
+            },
+        });
+        expect(authorized.statusCode).toBe(200);
+        expect(authorized.json()).toMatchObject({
+            event: {
+                assistanceType: "grocery",
+                groceryList: "mleko, chleb, jabłka",
+                budgetHint: "do 150 zł",
+                storePreference: "Biedronka",
+            },
+        });
+        const slots = await app.inject({
+            method: "PUT",
+            url: `/api/organizer/events/${body.event.id}/slots`,
+            headers: { cookie: cookieHeader },
+            payload: { dates: ["2026-11-03"] },
+        });
+        const slotId = (slots.json() as {
+            slots: Array<{
+                id: string;
+            }>;
+        }).slots[0]?.id;
+        const booking = await app.inject({
+            method: "POST",
+            url: `/api/invite/${body.event.invitationToken}/bookings`,
+            headers: {
+                cookie: `${EVENT_ACCESS_COOKIE}=${accessCookie}`,
+            },
+            payload: {
+                slotId,
+                participantName: "Kasia",
+                participantEmail: "kasia@example.com",
+                mealDescription: "nabiał i pieczywo",
+            },
+        });
+        expect(booking.statusCode).toBe(201);
+        expect(booking.json()).toMatchObject({
+            booking: {
+                mealDescription: "nabiał i pieczywo",
+                bookedOnBehalf: false,
+            },
+        });
+    });
     it("isolates access sessions across events and invalidates on PIN rotate", async () => {
         await signUpOrganizer();
         const eventA = await app.inject({

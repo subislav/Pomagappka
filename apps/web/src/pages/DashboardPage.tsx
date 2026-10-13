@@ -109,7 +109,11 @@ export function DashboardPage() {
                     </span>
                   </div>
                   <p className="mt-1 text-sm">
-                    {event.recipientDisplayName} · {event.startsOn} – {event.endsOn}
+                    {event.assistanceType === "grocery"
+                        ? pl.dashboard.typeGrocery
+                        : pl.dashboard.typeMeal}{" "}
+                    · {event.recipientDisplayName} · {event.startsOn} –{" "}
+                    {event.endsOn}
                   </p>
                 </Link>
               </li>))}

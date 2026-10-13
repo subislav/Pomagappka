@@ -35,7 +35,9 @@ export async function listOrganizerBookings(db: Database, organizerId: string, e
 export async function createBooking(db: Database, env: Env, email: EmailSender, opts: {
     eventId: string;
     input: CreateBookingBody;
+    bookedOnBehalf?: boolean;
 }) {
+    const bookedOnBehalf = opts.bookedOnBehalf === true;
     if (opts.input.idempotencyKey) {
         const existing = await db
             .select()
@@ -83,6 +85,7 @@ export async function createBooking(db: Database, env: Env, email: EmailSender, 
                 participantName: opts.input.participantName,
                 participantEmail: opts.input.participantEmail,
                 mealDescription: opts.input.mealDescription ?? null,
+                bookedOnBehalf,
                 status: "active",
                 idempotencyKey: opts.input.idempotencyKey ?? null,
             })
@@ -246,9 +249,18 @@ function mapBooking(booking: typeof bookings.$inferSelect, slotDate: string) {
         participantName: booking.participantName,
         participantEmail: booking.participantEmail,
         mealDescription: booking.mealDescription,
+        bookedOnBehalf: booking.bookedOnBehalf,
         status: booking.status as "active" | "cancelled",
         createdAt: booking.createdAt.toISOString(),
     };
+}
+export async function createOrganizerBooking(db: Database, env: Env, email: EmailSender, organizerId: string, eventId: string, input: CreateBookingBody) {
+    await findOwnedEvent(db, organizerId, eventId);
+    return createBooking(db, env, email, {
+        eventId,
+        input,
+        bookedOnBehalf: true,
+    });
 }
 function buildCancelUrl(appUrl: string, rawToken: string) {
     return `${appUrl.replace(/\/$/, "")}/anuluj/${encodeURIComponent(rawToken)}`;

@@ -1,6 +1,33 @@
-import type { OrganizerEvent, OrganizerEventListItem, ParticipantEvent, } from "@pomagappka/shared";
+import type { AssistanceType, EventStatus, GroceryCategory, OrganizerEvent, OrganizerEventListItem, ParticipantEvent, } from "@pomagappka/shared";
 import type { events } from "../../db/schema/domain.js";
 type EventRow = typeof events.$inferSelect;
+function parseGroceryCategories(value: unknown): GroceryCategory[] | null {
+    if (value == null)
+        return null;
+    if (!Array.isArray(value))
+        return null;
+    return value.filter((item): item is GroceryCategory => typeof item === "string");
+}
+function detailFields(row: EventRow) {
+    return {
+        dietaryPreferences: row.dietaryPreferences,
+        dropOffAddress: row.dropOffAddress,
+        recipientPhone: row.recipientPhone,
+        preferredDeliveryTime: row.preferredDeliveryTime,
+        specialInstructions: row.specialInstructions,
+        favoriteMeals: row.favoriteMeals,
+        leastFavoriteMeals: row.leastFavoriteMeals,
+        allergies: row.allergies,
+        photoUrl: row.photoUrl,
+        photoCaption: row.photoCaption,
+        groceryList: row.groceryList,
+        groceryCategories: parseGroceryCategories(row.groceryCategories),
+        budgetHint: row.budgetHint,
+        storePreference: row.storePreference,
+        dietaryOrAllergyNotes: row.dietaryOrAllergyNotes,
+        deliveryOrPickupNotes: row.deliveryOrPickupNotes,
+    };
+}
 export function toOrganizerEvent(row: EventRow, appUrl: string): OrganizerEvent {
     return {
         id: row.id,
@@ -10,12 +37,12 @@ export function toOrganizerEvent(row: EventRow, appUrl: string): OrganizerEvent 
         peopleCount: row.peopleCount,
         startsOn: row.startsOn,
         endsOn: row.endsOn,
-        dietaryPreferences: row.dietaryPreferences,
-        assistanceType: row.assistanceType as OrganizerEvent["assistanceType"],
+        ...detailFields(row),
+        assistanceType: row.assistanceType as AssistanceType,
         invitationToken: row.invitationToken,
         invitationUrl: `${appUrl.replace(/\/$/, "")}/i/${row.invitationToken}`,
         pinVersion: row.pinVersion,
-        status: row.status as OrganizerEvent["status"],
+        status: row.status as EventStatus,
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
     };
@@ -28,8 +55,8 @@ export function toOrganizerEventListItem(row: EventRow): OrganizerEventListItem 
         peopleCount: row.peopleCount,
         startsOn: row.startsOn,
         endsOn: row.endsOn,
-        assistanceType: row.assistanceType as OrganizerEventListItem["assistanceType"],
-        status: row.status as OrganizerEventListItem["status"],
+        assistanceType: row.assistanceType as AssistanceType,
+        status: row.status as EventStatus,
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
     };
@@ -42,8 +69,8 @@ export function toParticipantEvent(row: EventRow): ParticipantEvent {
         peopleCount: row.peopleCount,
         startsOn: row.startsOn,
         endsOn: row.endsOn,
-        dietaryPreferences: row.dietaryPreferences,
-        assistanceType: row.assistanceType as ParticipantEvent["assistanceType"],
-        status: row.status as ParticipantEvent["status"],
+        ...detailFields(row),
+        assistanceType: row.assistanceType as AssistanceType,
+        status: row.status as EventStatus,
     };
 }

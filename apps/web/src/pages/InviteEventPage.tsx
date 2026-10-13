@@ -2,11 +2,21 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createBookingBodySchema, createBookingResponseSchema, participantEventSchema, participantSlotsResponseSchema, type CreateBookingBody, type CreateBookingResponse, type ParticipantEvent, type ParticipantSlot, } from "@pomagappka/shared";
+import { createBookingBodySchema, createBookingResponseSchema, eventUpdatesResponseSchema, participantEventSchema, participantSlotsResponseSchema, type CreateBookingBody, type CreateBookingResponse, type EventUpdate, type ParticipantEvent, type ParticipantSlot, } from "@pomagappka/shared";
 import { Button } from "@/components/ui/Button";
 import { TextArea } from "@/components/ui/TextArea";
 import { TextField } from "@/components/ui/TextField";
 import { pl } from "@/locales/pl";
+function DetailLine({ label, value, }: {
+    label: string;
+    value: string | null | undefined;
+}) {
+    if (!value)
+        return null;
+    return (<p className="mt-3 text-sm">
+      <span className="font-semibold">{label}</span> {value}
+    </p>);
+}
 export function InviteEventPage() {
     const { token } = useParams<{
         token: string;
@@ -14,6 +24,7 @@ export function InviteEventPage() {
     const navigate = useNavigate();
     const [event, setEvent] = useState<ParticipantEvent | null>(null);
     const [slots, setSlots] = useState<ParticipantSlot[]>([]);
+    const [updates, setUpdates] = useState<EventUpdate[]>([]);
     const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
     const [confirmation, setConfirmation] = useState<CreateBookingResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -32,9 +43,10 @@ export function InviteEventPage() {
             return;
         let cancelled = false;
         async function load() {
-            const [eventRes, slotsRes] = await Promise.all([
+            const [eventRes, slotsRes, updatesRes] = await Promise.all([
                 fetch(`/api/invite/${token}/event`, { credentials: "include" }),
                 fetch(`/api/invite/${token}/slots`, { credentials: "include" }),
+                fetch(`/api/invite/${token}/updates`, { credentials: "include" }),
             ]);
             if (cancelled)
                 return;
@@ -56,6 +68,9 @@ export function InviteEventPage() {
             setEvent(participantEventSchema.parse(eventJson.event));
             const slotsJson = participantSlotsResponseSchema.parse(await slotsRes.json());
             setSlots(slotsJson.slots);
+            if (updatesRes.ok) {
+                setUpdates(eventUpdatesResponseSchema.parse(await updatesRes.json()).updates);
+            }
         }
         void load();
         return () => {
@@ -141,6 +156,10 @@ export function InviteEventPage() {
         </Link>
       </main>);
     }
+    const isGrocery = event.assistanceType === "grocery";
+    const categoryLabels = event.groceryCategories
+        ?.map((category) => pl.eventForm.groceryCategory[category])
+        .join(", ");
     return (<main className="mx-auto flex min-h-screen w-full max-w-xl flex-col px-6 py-12">
       <div className="flex items-start justify-between gap-4">
         <Link to="/" className="brand text-2xl font-bold text-[var(--color-sea)]">
@@ -152,7 +171,8 @@ export function InviteEventPage() {
       </div>
 
       <p className="mt-8 text-sm uppercase tracking-[0.08em] text-[var(--color-lagoon)]">
-        {pl.invite.eventTitle}
+        {pl.invite.eventTitle} ·{" "}
+        {isGrocery ? pl.dashboard.typeGrocery : pl.dashboard.typeMeal}
       </p>
       <h1 className="mt-2 text-3xl font-semibold">{event.title}</h1>
       <p className="mt-4 text-base">
@@ -166,10 +186,43 @@ export function InviteEventPage() {
         {pl.invite.dates} {event.startsOn} – {event.endsOn}
       </p>
       {event.description ? (<p className="mt-6 text-base leading-relaxed">{event.description}</p>) : null}
-      {event.dietaryPreferences ? (<p className="mt-4 text-sm">
-          <span className="font-semibold">{pl.invite.dietary}</span>{" "}
-          {event.dietaryPreferences}
-        </p>) : null}
+      {event.photoUrl ? (<figure className="mt-6">
+          <img src={event.photoUrl} alt={event.photoCaption ?? event.title} className="max-h-72 w-full rounded-md object-cover"/>
+          {event.photoCaption ? (<figcaption className="mt-2 text-sm opacity-80">
+              {event.photoCaption}
+            </figcaption>) : null}
+        </figure>) : null}
+
+      <DetailLine label={pl.invite.dropOffAddress} value={event.dropOffAddress}/>
+      <DetailLine label={pl.invite.recipientPhone} value={event.recipientPhone}/>
+      <DetailLine label={pl.invite.preferredDeliveryTime} value={event.preferredDeliveryTime}/>
+      <DetailLine label={pl.invite.specialInstructions} value={event.specialInstructions}/>
+
+      {isGrocery ? (<>
+          <DetailLine label={pl.invite.groceryList} value={event.groceryList}/>
+          <DetailLine label={pl.invite.groceryCategories} value={categoryLabels}/>
+          <DetailLine label={pl.invite.budgetHint} value={event.budgetHint}/>
+          <DetailLine label={pl.invite.storePreference} value={event.storePreference}/>
+          <DetailLine label={pl.invite.dietaryOrAllergyNotes} value={event.dietaryOrAllergyNotes}/>
+          <DetailLine label={pl.invite.deliveryOrPickupNotes} value={event.deliveryOrPickupNotes}/>
+        </>) : (<>
+          <DetailLine label={pl.invite.dietary} value={event.dietaryPreferences}/>
+          <DetailLine label={pl.invite.allergies} value={event.allergies}/>
+          <DetailLine label={pl.invite.favoriteMeals} value={event.favoriteMeals}/>
+          <DetailLine label={pl.invite.leastFavoriteMeals} value={event.leastFavoriteMeals}/>
+        </>)}
+
+      {updates.length > 0 ? (<section className="mt-8 space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--color-lagoon)]">
+            {pl.invite.updatesHeading}
+          </h2>
+          <ul className="space-y-3">
+            {updates.map((update) => (<li key={update.id} className="rounded-md border border-[var(--color-line)] bg-white/80 px-3 py-3 text-sm">
+                {update.imageUrl ? (<img src={update.imageUrl} alt={update.caption ?? ""} className="mb-2 max-h-48 w-full rounded object-cover"/>) : null}
+                {update.caption ? <p>{update.caption}</p> : null}
+              </li>))}
+          </ul>
+        </section>) : null}
 
       <section className="mt-10 space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--color-lagoon)]">
@@ -192,7 +245,7 @@ export function InviteEventPage() {
           <input type="hidden" {...register("slotId")}/>
           <TextField label={pl.invite.name} error={errors.participantName ? pl.auth.validationName : undefined} {...register("participantName")}/>
           <TextField label={pl.invite.email} type="email" error={errors.participantEmail ? pl.auth.validationEmail : undefined} {...register("participantEmail")}/>
-          <TextArea label={pl.invite.meal} {...register("mealDescription")}/>
+          <TextArea label={isGrocery ? pl.invite.groceryNote : pl.invite.meal} {...register("mealDescription")}/>
           {error ? (<p className="text-sm text-red-700" role="alert">
               {error}
             </p>) : null}

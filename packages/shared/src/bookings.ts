@@ -43,6 +43,7 @@ export const bookingSchema = z.object({
     participantName: z.string(),
     participantEmail: z.string().email(),
     mealDescription: z.string().nullable(),
+    bookedOnBehalf: z.boolean(),
     status: bookingStatusSchema,
     createdAt: z.string(),
 });

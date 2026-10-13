@@ -7,6 +7,7 @@ import { AppError } from "../../lib/errors.js";
 import { generateFourDigitPin, generateInvitationToken, hashPin, } from "../../lib/crypto.js";
 import { toOrganizerEvent, toOrganizerEventListItem, } from "./mappers.js";
 import { revokeEventAccessSessions } from "./access-session.js";
+import { eventDetailInsertValues, eventDetailUpdateValues, } from "./event-fields.js";
 export async function listOrganizerEvents(db: Database, organizerId: string) {
     const rows = await db
         .select()
@@ -23,6 +24,7 @@ export async function createOrganizerEvent(db: Database, env: Env, organizerId: 
     const pin = generateFourDigitPin();
     const pinHash = await hashPin(pin);
     const invitationToken = generateInvitationToken();
+    const details = eventDetailInsertValues(input);
     const [row] = await db
         .insert(events)
         .values({
@@ -33,7 +35,7 @@ export async function createOrganizerEvent(db: Database, env: Env, organizerId: 
         peopleCount: input.peopleCount,
         startsOn: input.startsOn,
         endsOn: input.endsOn,
-        dietaryPreferences: input.dietaryPreferences ?? null,
+        ...details,
         assistanceType: input.assistanceType ?? "meal",
         invitationToken,
         pinHash,
@@ -59,6 +61,26 @@ export async function updateOrganizerEvent(db: Database, env: Env, organizerId: 
     if (endsOn < startsOn) {
         throw new AppError(400, "VALIDATION_ERROR", "Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.");
     }
+    const details = eventDetailUpdateValues(input, {
+        dietaryPreferences: existing.dietaryPreferences,
+        dropOffAddress: existing.dropOffAddress,
+        recipientPhone: existing.recipientPhone,
+        preferredDeliveryTime: existing.preferredDeliveryTime,
+        specialInstructions: existing.specialInstructions,
+        favoriteMeals: existing.favoriteMeals,
+        leastFavoriteMeals: existing.leastFavoriteMeals,
+        allergies: existing.allergies,
+        photoUrl: existing.photoUrl,
+        photoCaption: existing.photoCaption,
+        groceryList: existing.groceryList,
+        groceryCategories: Array.isArray(existing.groceryCategories)
+            ? existing.groceryCategories
+            : null,
+        budgetHint: existing.budgetHint,
+        storePreference: existing.storePreference,
+        dietaryOrAllergyNotes: existing.dietaryOrAllergyNotes,
+        deliveryOrPickupNotes: existing.deliveryOrPickupNotes,
+    });
     const [row] = await db
         .update(events)
         .set({
@@ -70,9 +92,7 @@ export async function updateOrganizerEvent(db: Database, env: Env, organizerId: 
         peopleCount: input.peopleCount ?? existing.peopleCount,
         startsOn,
         endsOn,
-        dietaryPreferences: input.dietaryPreferences === undefined
-            ? existing.dietaryPreferences
-            : input.dietaryPreferences,
+        ...details,
         updatedAt: new Date(),
     })
         .where(eq(events.id, eventId))

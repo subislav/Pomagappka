@@ -1,9 +1,10 @@
-import { createEventBodySchema, updateEventBodySchema, } from "@pomagappka/shared";
+import { createEventBodySchema, createEventUpdateBodySchema, updateEventBodySchema, } from "@pomagappka/shared";
 import type { FastifyInstance } from "fastify";
 import type { Auth } from "../auth/auth.js";
 import { requireOrganizerSession } from "../auth/session.js";
 import { AppError, toErrorBody } from "../../lib/errors.js";
 import { closeOrganizerEvent, createOrganizerEvent, getOrganizerEvent, listOrganizerEvents, regenerateOrganizerPin, softDeleteOrganizerEvent, updateOrganizerEvent, } from "./event-service.js";
+import { createOrganizerEventUpdate, deleteOrganizerEventUpdate, listOrganizerEventUpdates, } from "./event-update-service.js";
 function handleRouteError(error: unknown, reply: {
     status: (code: number) => {
         send: (body: unknown) => unknown;
@@ -130,6 +131,61 @@ export async function registerOrganizerEventRoutes(app: FastifyInstance, auth: A
         try {
             const result = await regenerateOrganizerPin(app.db, session.user.id, id);
             return reply.send(result);
+        }
+        catch (error) {
+            return handleRouteError(error, reply, request.log);
+        }
+    });
+    app.get("/api/organizer/events/:id/updates", async (request, reply) => {
+        const session = await requireOrganizerSession(auth, request, reply);
+        if (!session)
+            return;
+        const { id } = request.params as {
+            id: string;
+        };
+        try {
+            const updates = await listOrganizerEventUpdates(app.db, session.user.id, id);
+            return reply.send({ updates });
+        }
+        catch (error) {
+            return handleRouteError(error, reply, request.log);
+        }
+    });
+    app.post("/api/organizer/events/:id/updates", async (request, reply) => {
+        const session = await requireOrganizerSession(auth, request, reply);
+        if (!session)
+            return;
+        const { id } = request.params as {
+            id: string;
+        };
+        const parsed = createEventUpdateBodySchema.safeParse(request.body);
+        if (!parsed.success) {
+            return reply.status(400).send({
+                error: {
+                    code: "VALIDATION_ERROR",
+                    message: "Nieprawidłowa aktualizacja.",
+                },
+            });
+        }
+        try {
+            const update = await createOrganizerEventUpdate(app.db, session.user.id, id, parsed.data);
+            return reply.status(201).send({ update });
+        }
+        catch (error) {
+            return handleRouteError(error, reply, request.log);
+        }
+    });
+    app.delete("/api/organizer/events/:id/updates/:updateId", async (request, reply) => {
+        const session = await requireOrganizerSession(auth, request, reply);
+        if (!session)
+            return;
+        const { id, updateId } = request.params as {
+            id: string;
+            updateId: string;
+        };
+        try {
+            await deleteOrganizerEventUpdate(app.db, session.user.id, id, updateId);
+            return reply.status(204).send();
         }
         catch (error) {
             return handleRouteError(error, reply, request.log);

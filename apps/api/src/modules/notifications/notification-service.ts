@@ -33,6 +33,7 @@ export async function sendBookingConfirmationEmail(db: Database, email: EmailSen
         slotDate: input.slotDate,
         mealDescription: input.mealDescription,
         cancelUrl: input.cancelUrl,
+        assistanceType: event.assistanceType === "grocery" ? "grocery" : "meal",
     });
     return dispatch(db, email, {
         idempotencyKey,

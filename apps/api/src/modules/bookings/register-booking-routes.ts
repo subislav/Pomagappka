@@ -5,7 +5,7 @@ import { requireOrganizerSession } from "../auth/session.js";
 import { AppError, toErrorBody } from "../../lib/errors.js";
 import { EVENT_ACCESS_COOKIE, readCookie, resolveEventAccessSession, } from "../events/access-session.js";
 import { findEventByInvitationToken } from "../events/event-service.js";
-import { cancelBookingByToken, createBooking, listOrganizerBookings, } from "./booking-service.js";
+import { cancelBookingByToken, createBooking, createOrganizerBooking, listOrganizerBookings, } from "./booking-service.js";
 import { listOrganizerSlots, listParticipantSlots, putOrganizerSlots, } from "./slot-service.js";
 function handleRouteError(error: unknown, reply: {
     status: (code: number) => {
@@ -90,6 +90,34 @@ export async function registerBookingRoutes(app: FastifyInstance, auth: Auth) {
         try {
             const bookings = await listOrganizerBookings(app.db, session.user.id, id);
             return reply.send({ bookings });
+        }
+        catch (error) {
+            return handleRouteError(error, reply, request.log);
+        }
+    });
+    app.post("/api/organizer/events/:id/bookings", async (request, reply) => {
+        const session = await requireOrganizerSession(auth, request, reply);
+        if (!session)
+            return;
+        const { id } = request.params as {
+            id: string;
+        };
+        const parsed = createBookingBodySchema.safeParse(request.body);
+        if (!parsed.success) {
+            return reply.status(400).send({
+                error: {
+                    code: "VALIDATION_ERROR",
+                    message: "Nieprawidłowe dane rezerwacji.",
+                },
+            });
+        }
+        try {
+            const result = await createOrganizerBooking(app.db, app.env, app.email, session.user.id, id, parsed.data);
+            return reply.status(result.reused ? 200 : 201).send({
+                booking: result.booking,
+                cancelToken: result.cancelToken,
+                cancelUrl: result.cancelUrl,
+            });
         }
         catch (error) {
             return handleRouteError(error, reply, request.log);
