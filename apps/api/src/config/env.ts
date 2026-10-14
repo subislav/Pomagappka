@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+function isHttpsUrl(value: string): boolean {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 const envSchema = z
   .object({
     NODE_ENV: z
@@ -39,6 +47,29 @@ const envSchema = z
         path: ["GOOGLE_CLIENT_ID"],
         message: "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must both be set",
       });
+    }
+
+    if (value.NODE_ENV === "production") {
+      for (const key of ["APP_URL", "API_URL", "BETTER_AUTH_URL"] as const) {
+        if (!isHttpsUrl(value[key])) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [key],
+            message: "Must be an https:// URL when NODE_ENV=production",
+          });
+        }
+      }
+      if (
+        value.EMAIL_PROVIDER === "resend" &&
+        value.EMAIL_FROM.toLowerCase().includes("localhost")
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["EMAIL_FROM"],
+          message:
+            "Set a verified Resend sender (not localhost) when EMAIL_PROVIDER=resend",
+        });
+      }
     }
   });
 

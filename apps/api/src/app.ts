@@ -15,15 +15,25 @@ export type BuildAppOptions = {
 };
 export async function buildApp(env: Env, options: BuildAppOptions = {}) {
     const app = Fastify({
+        trustProxy: true,
         logger: {
             level: env.LOG_LEVEL,
             redact: {
                 paths: [
                     "req.headers.authorization",
                     "req.headers.cookie",
+                    "req.body.pin",
+                    "req.body.password",
+                    "req.body.currentPassword",
+                    "req.body.newPassword",
                     "pin",
                     "password",
                     "pinHash",
+                    "cancelToken",
+                    "*.pin",
+                    "*.password",
+                    "*.pinHash",
+                    "*.cancelToken",
                 ],
                 remove: true,
             },

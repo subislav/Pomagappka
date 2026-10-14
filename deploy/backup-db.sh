@@ -22,16 +22,22 @@ set +a
 : "${POSTGRES_USER:?POSTGRES_USER required}"
 : "${POSTGRES_DB:?POSTGRES_DB required}"
 
+umask 077
 mkdir -p "$BACKUP_DIR"
+chmod 700 "$BACKUP_DIR"
+
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
-OUT="$BACKUP_DIR/pomagappka-${STAMP}.sql.gz"
+OUT="$BACKUP_DIR/pomagappka-${STAMP}.dump"
 
 echo "Backing up ${POSTGRES_DB} to ${OUT}"
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T "$SERVICE_DB" \
-  pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner --format=plain \
-  | gzip -c >"$OUT"
+  pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner --format=custom \
+  >"$OUT"
+chmod 600 "$OUT"
 
 echo "Pruning backups older than ${RETENTION_DAYS} days in ${BACKUP_DIR}"
+find "$BACKUP_DIR" -name 'pomagappka-*.dump' -type f -mtime "+$RETENTION_DAYS" -delete
 find "$BACKUP_DIR" -name 'pomagappka-*.sql.gz' -type f -mtime "+$RETENTION_DAYS" -delete
 
-echo "Done: $OUT ($(wc -c <"$OUT") bytes)"
+SIZE=$(wc -c <"$OUT" | tr -d ' ')
+echo "Done: $OUT ($SIZE bytes)"

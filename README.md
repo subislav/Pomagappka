@@ -57,11 +57,13 @@ pnpm test:e2e
 
 ## Produkcja
 
-Compose: `compose.prod.yaml` + Caddy (`deploy/Caddyfile`).
+Compose produkcyjny jest samodzielny: `compose.prod.yaml` + `deploy/Caddyfile` (bez `compose.yaml`).
 
 ```bash
 cp .env.prod.example .env.prod
-docker compose -f compose.prod.yaml --env-file .env.prod up --build -d
+chmod 600 .env.prod
+chmod +x deploy/*.sh
+./deploy/setup-prod.sh
 ```
 
 Lokalna weryfikacja topologii produkcyjnej (HTTPS z lokalnym certem Caddy + Mailpit):
@@ -69,12 +71,14 @@ Lokalna weryfikacja topologii produkcyjnej (HTTPS z lokalnym certem Caddy + Mail
 ```bash
 cp .env.prod.local.example .env.prod.local
 docker compose -f compose.prod.yaml -f compose.prod.local.yaml --env-file .env.prod.local up --build -d
-curl -fk https://localhost/api/health
+./deploy/verify-prod-local.sh
 ```
 
-Przenośne na VPS (Hetzner, Oracle Cloud, AWS EC2 itd.). Obrazy bazują na oficjalnych obrazach multi-arch (amd64/arm64), o ile upstream je wspiera.
+Obrazy bazują na oficjalnych multi-arch (amd64/arm64). Na Oracle A1 buduj natywnie na ARM.
 
-Backupy Postgres: `deploy/backup-db.sh` / `deploy/restore-db.sh`.
+Aktualizacja: `./deploy/update-prod.sh`  
+Health: `./deploy/health-prod.sh`  
+Backup: `./deploy/backup-db.sh`
 
 ## Auth
 
@@ -83,16 +87,12 @@ Backupy Postgres: `deploy/backup-db.sh` / `deploy/restore-db.sh`.
 - Google login: opcjonalnie, gdy ustawisz `GOOGLE_CLIENT_ID` i `GOOGLE_CLIENT_SECRET` (callback: `{BETTER_AUTH_URL}/api/auth/callback/google`)
 - PIN: 5 błędnych prób z tego samego IP → wymagany nowy PIN od organizatora
 
-## Fazy
-
-Obecnie: **Faza 0–6** (docs, Docker, auth, wydarzenia, rezerwacje, e-mail, E2E/produkcja/ops).
-
-Po zmianie zależności w `package.json` odtwórz wolumeny `node_modules` Compose
-(`docker compose down` + usuń wolumeny `*_node_modules` + `docker compose up --build`),
-inaczej kontenery mogą używać starego cache zależności.
-
 ## Założenia
 
 - Nazwa produktu w UI: **Pomagappka**
 - Strefa czasowa wyświetlania: `Europe/Warsaw` (UTC w bazie)
 - Mail w development: tylko Mailpit (bez wysyłki do internetu)
+
+Po zmianie zależności w `package.json` odtwórz wolumeny `node_modules` Compose
+(`docker compose down` + usuń wolumeny `*_node_modules` + `docker compose up --build`),
+inaczej kontenery mogą używać starego cache zależności.
