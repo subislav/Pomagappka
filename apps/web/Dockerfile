@@ -17,6 +17,8 @@ RUN rm -f packages/shared/*.tsbuildinfo apps/web/*.tsbuildinfo \
 FROM caddy:2.9-alpine AS runner
 COPY --from=build /app/apps/web/dist /srv
 COPY apps/web/Caddyfile.static /etc/caddy/Caddyfile
-RUN chown -R caddy:caddy /srv /config /data
+RUN addgroup -S caddy \
+  && adduser -S -H -D -G caddy caddy \
+  && chown -R caddy:caddy /srv /config /data
 USER caddy
 EXPOSE 8080
