@@ -3,7 +3,7 @@ import type { Env } from "./config/env.js";
 import { checkDatabase, createDb } from "./db/client.js";
 import { createEmailSender } from "./email/create-sender.js";
 import type { EmailSender } from "./email/types.js";
-import { createAuth } from "./modules/auth/auth.js";
+import { createAuth, type Auth } from "./modules/auth/auth.js";
 import { registerAuthRoutes } from "./modules/auth/register-auth-routes.js";
 import { registerBookingRoutes } from "./modules/bookings/register-booking-routes.js";
 import { registerInviteRoutes } from "./modules/events/register-invite-routes.js";
@@ -94,7 +94,7 @@ declare module "fastify" {
     db: ReturnType<typeof createDb>["db"];
     sql: ReturnType<typeof createDb>["sql"];
     env: Env;
-    auth: ReturnType<typeof createAuth>;
+    auth: Auth;
     email: EmailSender;
   }
 }

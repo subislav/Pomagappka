@@ -1,3 +1,4 @@
+import type { DBAdapter } from "@better-auth/core/db/adapter";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuthMiddleware } from "better-auth/api";
