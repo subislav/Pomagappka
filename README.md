@@ -1,6 +1,6 @@
 # Pomagappka
 
-Polskojęzyczna aplikacja webowa do organizacji dostaw posiłków dla osób i rodzin potrzebujących tymczasowego wsparcia (w stylu Meal Train).
+Polskojęzyczna aplikacja webowa do organizacji dostaw posiłków i zakupów dla osób i rodzin potrzebujących tymczasowego wsparcia.
 
 ## Wymagania
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import type { HealthResponse } from "@pomagappka/shared";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/Button";
 import { fetchHealth } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
@@ -70,9 +71,7 @@ export function LandingPage() {
         <p className="text-sm text-[color-mix(in_srgb,var(--color-ink)_55%,white)]">
           {pl.ctaInvite}
         </p>
-        <p className="text-xs text-[color-mix(in_srgb,var(--color-ink)_45%,white)]">
-          {pl.footer}
-        </p>
+        <SiteFooter />
       </section>
     </main>);
 }

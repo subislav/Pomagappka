@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { participantEventSchema, verifyPinBodySchema, type VerifyPinBody, } from "@pomagappka/shared";
+import { PrivacyNotice } from "@/components/PrivacyNotice";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { pl } from "@/locales/pl";
@@ -79,6 +81,9 @@ export function InvitePinPage() {
       <p className="mt-2 text-sm leading-relaxed text-[color-mix(in_srgb,var(--color-ink)_75%,white)]">
         {pl.invite.pinBody}
       </p>
+      <div className="mt-4">
+        <PrivacyNotice variant="recipient" />
+      </div>
 
       <form className="mt-8 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
         <TextField label={pl.invite.pinLabel} inputMode="numeric" autoComplete="one-time-code" maxLength={4} error={errors.pin ? pl.invite.pinLabel : undefined} {...register("pin")}/>
@@ -89,5 +94,8 @@ export function InvitePinPage() {
           {pl.invite.submit}
         </Button>
       </form>
+      <div className="mt-10">
+        <SiteFooter />
+      </div>
     </main>);
 }

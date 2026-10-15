@@ -30,6 +30,29 @@ const envSchema = z
     BETTER_AUTH_URL: z.string().url(),
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
+    PRIVACY_CONTACT_EMAIL: z.preprocess(
+      (value) =>
+        typeof value === "string" && value.trim() === "" ? undefined : value,
+      z.string().email().optional(),
+    ),
+    PRIVACY_CLEANUP_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    PRIVACY_CLEANUP_DRY_RUN: z
+      .enum(["true", "false"])
+      .default("true")
+      .transform((value) => value === "true"),
+    PRIVACY_PIN_ATTEMPT_RETENTION_DAYS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(30),
+    PRIVACY_NOTIFICATION_RETENTION_DAYS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(90),
   })
   .superRefine((value, ctx) => {
     if (value.EMAIL_PROVIDER === "resend" && !value.RESEND_API_KEY) {

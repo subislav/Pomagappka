@@ -3,10 +3,20 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpBodySchema, type SignUpBody } from "@pomagappka/shared";
+import { z } from "zod";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { signIn, signUp, useSession } from "@/lib/auth-client";
 import { pl } from "@/locales/pl";
+
+const registerFormSchema = signUpBodySchema.extend({
+  acceptTerms: z
+    .boolean()
+    .refine((value) => value === true, { message: "acceptTerms" }),
+});
+
+type RegisterFormValues = z.infer<typeof registerFormSchema>;
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -16,11 +26,18 @@ export function RegisterPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
-  } = useForm<SignUpBody>({
-    resolver: zodResolver(signUpBodySchema),
-    defaultValues: { name: "", email: "", password: "" },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      acceptTerms: false,
+    },
   });
+  const acceptTerms = watch("acceptTerms");
 
   useEffect(() => {
     let cancelled = false;
@@ -39,12 +56,17 @@ export function RegisterPage() {
     return <Navigate to="/panel" replace />;
   }
 
-  async function onSubmit(values: SignUpBody) {
+  async function onSubmit(values: RegisterFormValues) {
     setFormError(null);
-    const result = await signUp.email({
+    const payload: SignUpBody = {
       name: values.name,
       email: values.email,
       password: values.password,
+    };
+    const result = await signUp.email({
+      name: payload.name,
+      email: payload.email,
+      password: payload.password,
     });
     if (result.error) {
       setFormError(result.error.message || pl.auth.errorGeneric);
@@ -54,6 +76,10 @@ export function RegisterPage() {
   }
 
   async function onGoogle() {
+    if (!acceptTerms) {
+      setFormError(pl.auth.acceptTermsRequired);
+      return;
+    }
     setFormError(null);
     await signIn.social({
       provider: "google",
@@ -95,6 +121,44 @@ export function RegisterPage() {
           {...register("password")}
         />
 
+        <label className="flex items-start gap-3 text-sm leading-relaxed">
+          <input
+            type="checkbox"
+            className="mt-1"
+            {...register("acceptTerms")}
+          />
+          <span>
+            {pl.auth.acceptTermsPrefix}{" "}
+            <Link
+              className="text-[var(--color-sea)] underline"
+              to="/regulamin"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {pl.legal.terms}
+            </Link>{" "}
+            {pl.auth.acceptTermsSuffix}
+          </span>
+        </label>
+        {errors.acceptTerms ? (
+          <p className="text-sm text-red-700" role="alert">
+            {pl.auth.acceptTermsRequired}
+          </p>
+        ) : null}
+
+        <p className="text-sm leading-relaxed text-[color-mix(in_srgb,var(--color-ink)_70%,white)]">
+          {pl.auth.privacyNoticeRegister}{" "}
+          <Link
+            className="text-[var(--color-sea)] underline"
+            to="/polityka-prywatnosci"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {pl.legal.privacy}
+          </Link>
+          .
+        </p>
+
         {formError ? (
           <p
             className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800"
@@ -114,6 +178,7 @@ export function RegisterPage() {
           type="button"
           variant="secondary"
           className="mt-3 w-full"
+          disabled={!acceptTerms}
           onClick={() => void onGoogle()}
         >
           {pl.auth.googleRegister}
@@ -130,6 +195,9 @@ export function RegisterPage() {
           {pl.auth.backHome}
         </Link>
       </p>
+      <div className="mt-10">
+        <SiteFooter />
+      </div>
     </main>
   );
 }

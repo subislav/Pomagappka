@@ -17,14 +17,14 @@ function detailFields(row: EventRow) {
         specialInstructions: row.specialInstructions,
         favoriteMeals: row.favoriteMeals,
         leastFavoriteMeals: row.leastFavoriteMeals,
-        allergies: row.allergies,
+        allergies: null,
         photoUrl: row.photoUrl,
         photoCaption: row.photoCaption,
         groceryList: row.groceryList,
         groceryCategories: parseGroceryCategories(row.groceryCategories),
         budgetHint: row.budgetHint,
         storePreference: row.storePreference,
-        dietaryOrAllergyNotes: row.dietaryOrAllergyNotes,
+        dietaryOrAllergyNotes: null,
         deliveryOrPickupNotes: row.deliveryOrPickupNotes,
     };
 }

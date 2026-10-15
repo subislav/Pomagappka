@@ -136,7 +136,6 @@ describe.skipIf(!hasDatabase)("events + PIN access", () => {
                 endsOn: "2026-11-07",
                 dropOffAddress: "ul. Sekwana 12, Warszawa",
                 recipientPhone: "+48123123123",
-                allergies: "orzechy",
             },
         });
         expect(created.statusCode).toBe(201);
@@ -144,10 +143,12 @@ describe.skipIf(!hasDatabase)("events + PIN access", () => {
             event: {
                 invitationToken: string;
                 dropOffAddress: string;
+                allergies: string | null;
             };
             pin: string;
         };
         expect(body.event.dropOffAddress).toBe("ul. Sekwana 12, Warszawa");
+        expect(body.event.allergies).toBeNull();
         const unauthorized = await app.inject({
             method: "GET",
             url: `/api/invite/${body.event.invitationToken}/event`,
@@ -173,7 +174,7 @@ describe.skipIf(!hasDatabase)("events + PIN access", () => {
             event: {
                 dropOffAddress: "ul. Sekwana 12, Warszawa",
                 recipientPhone: "+48123123123",
-                allergies: "orzechy",
+                allergies: null,
             },
         });
     });

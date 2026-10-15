@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createEventBodySchema, groceryCategorySchema, type CreateEventBody, type GroceryCategory, createEventResponseSchema, } from "@pomagappka/shared";
+import { PrivacyNotice } from "@/components/PrivacyNotice";
 import { Button } from "@/components/ui/Button";
 import { TextArea } from "@/components/ui/TextArea";
 import { TextField } from "@/components/ui/TextField";
@@ -28,14 +29,12 @@ export function CreateEventPage() {
             specialInstructions: "",
             favoriteMeals: "",
             leastFavoriteMeals: "",
-            allergies: "",
             photoUrl: "",
             photoCaption: "",
             groceryList: "",
             groceryCategories: [],
             budgetHint: "",
             storePreference: "",
-            dietaryOrAllergyNotes: "",
             deliveryOrPickupNotes: "",
         },
     });
@@ -63,7 +62,6 @@ export function CreateEventPage() {
                 specialInstructions: values.specialInstructions || null,
                 favoriteMeals: values.favoriteMeals || null,
                 leastFavoriteMeals: values.leastFavoriteMeals || null,
-                allergies: values.allergies || null,
                 photoUrl: values.photoUrl || null,
                 photoCaption: values.photoCaption || null,
                 groceryList: values.groceryList || null,
@@ -72,7 +70,6 @@ export function CreateEventPage() {
                     : null,
                 budgetHint: values.budgetHint || null,
                 storePreference: values.storePreference || null,
-                dietaryOrAllergyNotes: values.dietaryOrAllergyNotes || null,
                 deliveryOrPickupNotes: values.deliveryOrPickupNotes || null,
             }),
         });
@@ -95,6 +92,9 @@ export function CreateEventPage() {
         {pl.brand}
       </Link>
       <h1 className="mt-6 text-2xl font-semibold">{pl.eventForm.createTitle}</h1>
+      <div className="mt-4">
+        <PrivacyNotice variant="organizer-event" />
+      </div>
 
       <form className="mt-8 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
         <fieldset className="space-y-2">
@@ -125,7 +125,6 @@ export function CreateEventPage() {
 
         {assistanceType === "meal" ? (<>
             <TextArea label={pl.eventForm.dietary} {...register("dietaryPreferences")}/>
-            <TextArea label={pl.eventForm.allergies} {...register("allergies")}/>
             <TextArea label={pl.eventForm.favoriteMeals} {...register("favoriteMeals")}/>
             <TextArea label={pl.eventForm.leastFavoriteMeals} {...register("leastFavoriteMeals")}/>
           </>) : (<>
@@ -143,7 +142,6 @@ export function CreateEventPage() {
             </fieldset>
             <TextField label={pl.eventForm.budgetHint} {...register("budgetHint")}/>
             <TextField label={pl.eventForm.storePreference} {...register("storePreference")}/>
-            <TextArea label={pl.eventForm.dietaryOrAllergyNotes} {...register("dietaryOrAllergyNotes")}/>
             <TextArea label={pl.eventForm.deliveryOrPickupNotes} {...register("deliveryOrPickupNotes")}/>
           </>)}
 

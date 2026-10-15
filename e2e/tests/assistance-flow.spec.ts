@@ -9,7 +9,7 @@ async function registerOrganizer(page: Page, email: string, password: string) {
     await expect(page).toHaveURL(/\/panel$/);
     await expect(page.getByRole("heading", { name: "Panel organizatora" })).toBeVisible();
 }
-test.describe("meal train critical path", () => {
+test.describe("assistance critical path", () => {
     test("register → create event → slot → PIN → book → cancel", async ({ page, browser, }) => {
         const email = uniqueEmail("org");
         const password = "Haslo12345";

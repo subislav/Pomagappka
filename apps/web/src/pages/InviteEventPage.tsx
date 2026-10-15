@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createBookingBodySchema, createBookingResponseSchema, eventUpdatesResponseSchema, participantEventSchema, participantSlotsResponseSchema, type CreateBookingBody, type CreateBookingResponse, type EventUpdate, type ParticipantEvent, type ParticipantSlot, } from "@pomagappka/shared";
+import { PrivacyNotice } from "@/components/PrivacyNotice";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/Button";
 import { TextArea } from "@/components/ui/TextArea";
 import { TextField } from "@/components/ui/TextField";
@@ -198,16 +200,18 @@ export function InviteEventPage() {
       <DetailLine label={pl.invite.preferredDeliveryTime} value={event.preferredDeliveryTime}/>
       <DetailLine label={pl.invite.specialInstructions} value={event.specialInstructions}/>
 
+      <div className="mt-6">
+        <PrivacyNotice variant="recipient" />
+      </div>
+
       {isGrocery ? (<>
           <DetailLine label={pl.invite.groceryList} value={event.groceryList}/>
           <DetailLine label={pl.invite.groceryCategories} value={categoryLabels}/>
           <DetailLine label={pl.invite.budgetHint} value={event.budgetHint}/>
           <DetailLine label={pl.invite.storePreference} value={event.storePreference}/>
-          <DetailLine label={pl.invite.dietaryOrAllergyNotes} value={event.dietaryOrAllergyNotes}/>
           <DetailLine label={pl.invite.deliveryOrPickupNotes} value={event.deliveryOrPickupNotes}/>
         </>) : (<>
           <DetailLine label={pl.invite.dietary} value={event.dietaryPreferences}/>
-          <DetailLine label={pl.invite.allergies} value={event.allergies}/>
           <DetailLine label={pl.invite.favoriteMeals} value={event.favoriteMeals}/>
           <DetailLine label={pl.invite.leastFavoriteMeals} value={event.leastFavoriteMeals}/>
         </>)}
@@ -242,6 +246,7 @@ export function InviteEventPage() {
 
       {selectedSlotId ? (<form className="mt-8 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <h2 className="text-lg font-semibold">{pl.invite.bookTitle}</h2>
+          <PrivacyNotice variant="booking" />
           <input type="hidden" {...register("slotId")}/>
           <TextField label={pl.invite.name} error={errors.participantName ? pl.auth.validationName : undefined} {...register("participantName")}/>
           <TextField label={pl.invite.email} type="email" error={errors.participantEmail ? pl.auth.validationEmail : undefined} {...register("participantEmail")}/>
@@ -253,5 +258,9 @@ export function InviteEventPage() {
             {pl.invite.submitBook}
           </Button>
         </form>) : null}
+
+      <div className="mt-12">
+        <SiteFooter />
+      </div>
     </main>);
 }

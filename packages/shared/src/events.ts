@@ -20,7 +20,6 @@ const mealDetailFields = {
     specialInstructions: optionalText(2000),
     favoriteMeals: optionalText(2000),
     leastFavoriteMeals: optionalText(2000),
-    allergies: optionalText(2000),
     photoUrl: optionalHttpUrl(2000),
     photoCaption: optionalText(500),
 };
@@ -29,7 +28,6 @@ const groceryDetailFields = {
     groceryCategories: z.array(groceryCategorySchema).max(12).optional().nullable(),
     budgetHint: optionalText(500),
     storePreference: optionalText(500),
-    dietaryOrAllergyNotes: optionalText(2000),
     deliveryOrPickupNotes: optionalText(2000),
 };
 export const createEventBodySchema = z

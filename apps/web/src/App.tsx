@@ -7,15 +7,23 @@ import { EventDetailPage } from "./pages/EventDetailPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { InviteEventPage } from "./pages/InviteEventPage";
 import { InvitePinPage } from "./pages/InvitePinPage";
+import { CookiesPage } from "./pages/CookiesPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
+import { PrivacyContactPage } from "./pages/PrivacyContactPage";
+import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { TermsPage } from "./pages/TermsPage";
 
 export function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/polityka-prywatnosci" element={<PrivacyPolicyPage />} />
+      <Route path="/regulamin" element={<TermsPage />} />
+      <Route path="/cookies" element={<CookiesPage />} />
+      <Route path="/kontakt-prywatnosc" element={<PrivacyContactPage />} />
       <Route path="/logowanie" element={<LoginPage />} />
       <Route path="/rejestracja" element={<RegisterPage />} />
       <Route path="/zapomniane-haslo" element={<ForgotPasswordPage />} />

@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createBookingBodySchema, createBookingResponseSchema, createEventUpdateBodySchema, eventUpdatesResponseSchema, groceryCategorySchema, mealSlotSchema, organizerBookingsResponseSchema, organizerEventSchema, organizerSlotsResponseSchema, regeneratePinResponseSchema, updateEventBodySchema, type Booking, type CreateBookingBody, type CreateEventUpdateBody, type EventUpdate, type GroceryCategory, type MealSlot, type OrganizerEvent, type UpdateEventBody, } from "@pomagappka/shared";
 import { z } from "zod";
+import { PrivacyNotice } from "@/components/PrivacyNotice";
 import { Button } from "@/components/ui/Button";
 import { TextArea } from "@/components/ui/TextArea";
 import { TextField } from "@/components/ui/TextField";
@@ -99,14 +100,12 @@ export function EventDetailPage() {
             specialInstructions: parsed.specialInstructions ?? "",
             favoriteMeals: parsed.favoriteMeals ?? "",
             leastFavoriteMeals: parsed.leastFavoriteMeals ?? "",
-            allergies: parsed.allergies ?? "",
             photoUrl: parsed.photoUrl ?? "",
             photoCaption: parsed.photoCaption ?? "",
             groceryList: parsed.groceryList ?? "",
             groceryCategories: parsed.groceryCategories ?? [],
             budgetHint: parsed.budgetHint ?? "",
             storePreference: parsed.storePreference ?? "",
-            dietaryOrAllergyNotes: parsed.dietaryOrAllergyNotes ?? "",
             deliveryOrPickupNotes: parsed.deliveryOrPickupNotes ?? "",
         });
     }
@@ -166,7 +165,6 @@ export function EventDetailPage() {
                 specialInstructions: emptyToNull(values.specialInstructions),
                 favoriteMeals: emptyToNull(values.favoriteMeals),
                 leastFavoriteMeals: emptyToNull(values.leastFavoriteMeals),
-                allergies: emptyToNull(values.allergies),
                 photoUrl: emptyToNull(values.photoUrl),
                 photoCaption: emptyToNull(values.photoCaption),
                 groceryList: emptyToNull(values.groceryList),
@@ -175,7 +173,6 @@ export function EventDetailPage() {
                     : null,
                 budgetHint: emptyToNull(values.budgetHint),
                 storePreference: emptyToNull(values.storePreference),
-                dietaryOrAllergyNotes: emptyToNull(values.dietaryOrAllergyNotes),
                 deliveryOrPickupNotes: emptyToNull(values.deliveryOrPickupNotes),
             }),
         });
@@ -347,6 +344,9 @@ export function EventDetailPage() {
       <p className="mt-1 text-sm text-[var(--color-lagoon)]">
         {isGrocery ? pl.dashboard.typeGrocery : pl.dashboard.typeMeal}
       </p>
+      <div className="mt-4">
+        <PrivacyNotice variant="organizer-event" />
+      </div>
 
       {event.status === "closed" ? (<p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-950">
           {pl.eventDetail.closedNotice}
@@ -402,11 +402,9 @@ export function EventDetailPage() {
             </fieldset>
             <TextField label={pl.eventForm.budgetHint} {...register("budgetHint")}/>
             <TextField label={pl.eventForm.storePreference} {...register("storePreference")}/>
-            <TextArea label={pl.eventForm.dietaryOrAllergyNotes} {...register("dietaryOrAllergyNotes")}/>
             <TextArea label={pl.eventForm.deliveryOrPickupNotes} {...register("deliveryOrPickupNotes")}/>
           </>) : (<>
             <TextArea label={pl.eventForm.dietary} {...register("dietaryPreferences")}/>
-            <TextArea label={pl.eventForm.allergies} {...register("allergies")}/>
             <TextArea label={pl.eventForm.favoriteMeals} {...register("favoriteMeals")}/>
             <TextArea label={pl.eventForm.leastFavoriteMeals} {...register("leastFavoriteMeals")}/>
           </>)}

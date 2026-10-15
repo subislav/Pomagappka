@@ -13,6 +13,32 @@ export const pl = {
   statusError: "Nie udało się połączyć z API.",
   footer:
     "Pomagappka — wsparcie posiłkami, zakupami i (w przyszłości) innymi formami pomocy.",
+  legal: {
+    navLabel: "Informacje prawne",
+    privacy: "Polityka prywatności",
+    terms: "Regulamin",
+    cookies: "Pliki cookie",
+    backHome: "Wróć na stronę główną",
+  },
+  privacyNotice: {
+    ariaLabel: "Informacja o ochronie danych",
+    contactAdmin: "Kontakt w sprawie prywatności",
+    recipient: {
+      body: "Dane odbiorcy wsparcia są przetwarzane w celu organizacji pomocy. Jeśli jesteś odbiorcą, możesz zapoznać się z polityką prywatności i skontaktować się z administratorem serwisu. To nie jest pełna realizacja obowiązku z art. 14 RODO — szczegóły zależą od administratora i podstaw prawnych.",
+    },
+    booking: {
+      body: "Przed rezerwacją: podajesz imię, nazwisko i e-mail w celu potwierdzenia terminu oraz wiadomości transakcyjnych (potwierdzenie, anulowanie, przypomnienie). Szczegóły w polityce prywatności.",
+    },
+    "organizer-event": {
+      body: "Wpisujesz dane odbiorcy (osoby trzeciej). Nie podawaj danych medycznych ani diagnoz. Poinformuj odbiorcę o przetwarzaniu danych w miarę możliwości. To nie zastępuje konsultacji prawnej w sprawie art. 14 RODO.",
+    },
+  },
+  privacyContact: {
+    title: "Kontakt w sprawie prywatności",
+    body: "Administratorem danych osobowych w serwisie Pomagappka jest Jan Subczynski. W sprawach ochrony danych napisz na adres poniżej lub sprawdź politykę prywatności.",
+    emailUnavailable:
+      "Adres kontaktowy nie jest skonfigurowany w tej instalacji. Napisz na subijanek@gmail.com lub sprawdź politykę prywatności.",
+  },
   auth: {
     loginTitle: "Logowanie organizatora",
     registerTitle: "Rejestracja organizatora",
@@ -39,6 +65,11 @@ export const pl = {
     resetInvalid: "Link resetu jest nieprawidłowy lub wygasł.",
     googleLogin: "Kontynuuj z Google",
     googleRegister: "Zarejestruj się przez Google",
+    acceptTermsPrefix: "Akceptuję",
+    acceptTermsSuffix: "serwisu (wymagane do założenia konta).",
+    privacyNoticeRegister:
+      "Informacje o przetwarzaniu danych konta organizatora znajdują się w",
+    acceptTermsRequired: "Aby się zarejestrować, zaakceptuj regulamin.",
     errorGeneric: "Nie udało się wykonać operacji. Spróbuj ponownie.",
     errorInvalid: "Nieprawidłowy e-mail lub hasło.",
     validationName: "Podaj imię i nazwisko.",
@@ -61,12 +92,19 @@ export const pl = {
     statusDraft: "Szkic",
     typeMeal: "Posiłki",
     typeGrocery: "Zakupy",
+    privacyHeading: "Prywatność konta",
+    erasureRequest:
+      "Wyślij wniosek o usunięcie konta (obsługa ręczna, bez automatycznego kasowania danych)",
+    erasureSending: "Wysyłanie wniosku…",
+    erasureSent:
+      "Wniosek przyjęty. Usunięcie nie jest automatyczne — administrator skontaktuje się w sprawie dalszych kroków.",
+    erasureFailed: "Nie udało się wysłać wniosku. Spróbuj ponownie później.",
   },
   eventForm: {
     createTitle: "Nowe wydarzenie",
     editTitle: "Edytuj wydarzenie",
     assistanceType: "Rodzaj wsparcia",
-    typeMeal: "Posiłki (Meal Train)",
+    typeMeal: "Posiłki",
     typeGrocery: "Zakupy spożywcze",
     title: "Tytuł",
     description: "Opis (opcjonalnie)",
@@ -74,21 +112,21 @@ export const pl = {
     peopleCount: "Liczba osób",
     startsOn: "Data od",
     endsOn: "Data do",
-    dietary: "Preferencje żywieniowe (opcjonalnie)",
-    allergies: "Alergie i nietolerancje (opcjonalnie)",
+    dietary:
+      "Preferencje smakowe / styl żywienia (opcjonalnie, np. wegetariańskie — bez diagnoz medycznych)",
     dropOffAddress: "Adres dostawy (widoczny po PIN)",
     recipientPhone: "Telefon odbiorcy (widoczny po PIN)",
     preferredDeliveryTime: "Preferowana pora dostawy",
-    specialInstructions: "Dodatkowe wskazówki",
+    specialInstructions:
+      "Dodatkowe wskazówki logistyczne (bez danych medycznych i diagnoz)",
     favoriteMeals: "Ulubione posiłki",
-    leastFavoriteMeals: "Posiłki, których unikać",
+    leastFavoriteMeals: "Posiłki, których unikać (preferencje smakowe)",
     photoUrl: "URL zdjęcia (opcjonalnie)",
     photoCaption: "Podpis zdjęcia",
     groceryList: "Lista zakupów",
     groceryCategories: "Kategorie zakupów",
     budgetHint: "Budżet / wskazówka kwotowa",
     storePreference: "Preferowany sklep",
-    dietaryOrAllergyNotes: "Uwagi dietetyczne / alergie (zakupy)",
     deliveryOrPickupNotes: "Dostawa lub odbiór — wskazówki",
     groceryCategory: {
       dairy: "Nabiał",
@@ -157,8 +195,7 @@ export const pl = {
     forRecipient: "Dla:",
     people: "Liczba osób:",
     dates: "Termin:",
-    dietary: "Preferencje żywieniowe:",
-    allergies: "Alergie:",
+    dietary: "Preferencje smakowe:",
     dropOffAddress: "Adres dostawy:",
     recipientPhone: "Telefon:",
     preferredDeliveryTime: "Preferowana pora:",
@@ -169,7 +206,6 @@ export const pl = {
     groceryCategories: "Kategorie:",
     budgetHint: "Budżet:",
     storePreference: "Sklep:",
-    dietaryOrAllergyNotes: "Uwagi dietetyczne / alergie:",
     deliveryOrPickupNotes: "Dostawa / odbiór:",
     updatesHeading: "Aktualizacje",
     logout: "Wyjdź",

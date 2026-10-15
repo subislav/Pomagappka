@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signInBodySchema, type SignInBody } from "@pomagappka/shared";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { signIn, useSession } from "@/lib/auth-client";
@@ -143,6 +144,9 @@ export function LoginPage() {
           {pl.auth.backHome}
         </Link>
       </p>
+      <div className="mt-10">
+        <SiteFooter />
+      </div>
     </main>
   );
 }
